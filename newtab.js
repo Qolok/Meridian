@@ -108,6 +108,17 @@ function colorLabel(color) {
   return color ? color.charAt(0).toUpperCase() + color.slice(1) : 'Group';
 }
 
+let renderScheduled = false;
+
+function scheduleRender() {
+  if (renderScheduled) return;
+  renderScheduled = true;
+  setTimeout(async () => {
+    renderScheduled = false;
+    await render();
+  }, 50);
+}
+
 async function render() {
   const container = document.getElementById('workspace-container');
   container.innerHTML = '';
@@ -148,13 +159,13 @@ async function render() {
     for (const [name, clusterTabs] of clusters) {
       const workspace = { id: `dc_${name}`, name };
       const lane = createWorkspaceLane(workspace, clusterTabs, thumbnails, handleTabClosed);
-      lane.addEventListener('workspace-reassigned', render);
+      lane.addEventListener('workspace-reassigned', scheduleRender);
       container.appendChild(lane);
     }
   } else if (ungroupedTabs.length > 0) {
     const workspace = { id: 'unsorted', name: 'Unsorted' };
     const lane = createWorkspaceLane(workspace, ungroupedTabs, thumbnails, handleTabClosed);
-    lane.addEventListener('workspace-reassigned', render);
+    lane.addEventListener('workspace-reassigned', scheduleRender);
     container.appendChild(lane);
   }
 
@@ -164,7 +175,7 @@ async function render() {
     const name = group?.title?.trim() || colorLabel(group?.color);
     const workspace = { id: `cg_${groupId}`, name };
     const lane = createWorkspaceLane(workspace, tabs, thumbnails, handleTabClosed, { chromeGroup: group });
-    lane.addEventListener('workspace-reassigned', render);
+    lane.addEventListener('workspace-reassigned', scheduleRender);
     container.appendChild(lane);
   }
 }
@@ -189,26 +200,26 @@ async function init() {
 
   await render();
 
-  chrome.tabs.onCreated.addListener(render);
-  chrome.tabs.onRemoved.addListener(render);
+  chrome.tabs.onCreated.addListener(scheduleRender);
+  chrome.tabs.onRemoved.addListener(scheduleRender);
   chrome.tabs.onUpdated.addListener((id, info) => {
-    if (info.title || info.favIconUrl || info.groupId !== undefined) render();
+    if (info.title || info.favIconUrl || info.groupId !== undefined) scheduleRender();
   });
-  chrome.tabGroups.onCreated.addListener(render);
-  chrome.tabGroups.onRemoved.addListener(render);
-  chrome.tabGroups.onUpdated.addListener(render);
+  chrome.tabGroups.onCreated.addListener(scheduleRender);
+  chrome.tabGroups.onRemoved.addListener(scheduleRender);
+  chrome.tabGroups.onUpdated.addListener(scheduleRender);
 
-  window.addEventListener('settings-changed', render);
+  window.addEventListener('settings-changed', scheduleRender);
 
   // Re-render when Meridian regains focus so new thumbnails appear
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) render();
+    if (!document.hidden) scheduleRender();
   });
 
   // Re-render whenever a thumbnail is written to storage
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && Object.keys(changes).some(k => k.startsWith('thumb_'))) {
-      render();
+      scheduleRender();
     }
   });
 }

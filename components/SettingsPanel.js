@@ -91,6 +91,31 @@ export function createSettingsPanel(container, onClose) {
   domainGroup.appendChild(toggleRow);
   panel.appendChild(domainGroup);
 
+  // --- Refresh thumbnails ---
+  const refreshGroup = document.createElement('div');
+  refreshGroup.className = 'settings-group';
+
+  const refreshLabel = document.createElement('span');
+  refreshLabel.className = 'settings-label';
+  refreshLabel.textContent = 'Thumbnails';
+  refreshGroup.appendChild(refreshLabel);
+
+  const refreshBtn = document.createElement('button');
+  refreshBtn.className = 'settings-action-btn';
+  refreshBtn.textContent = 'Refresh all thumbnails (this will cycle tabs)';
+  refreshBtn.addEventListener('click', async () => {
+    refreshBtn.disabled = true;
+    refreshBtn.textContent = 'Refreshing…';
+    await chrome.runtime.sendMessage({ type: 'REFRESH_THUMBNAILS' });
+    refreshBtn.textContent = 'Done';
+    setTimeout(() => {
+      refreshBtn.disabled = false;
+      refreshBtn.textContent = 'Refresh all thumbnails (this will cycle tabs)';
+    }, 2000);
+  });
+  refreshGroup.appendChild(refreshBtn);
+  panel.appendChild(refreshGroup);
+
   container.appendChild(panel);
 
   chrome.storage.sync.get(['newTabBehavior', 'groupByDomain']).then((saved) => {
