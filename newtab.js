@@ -139,6 +139,12 @@ function scheduleRender() {
   }, 50);
 }
 
+function sortByTabOrder(tabs, order) {
+  if (!order?.length) return tabs;
+  const pos = new Map(order.map((id, i) => [id, i]));
+  return [...tabs].sort((a, b) => (pos.get(a.id) ?? Infinity) - (pos.get(b.id) ?? Infinity));
+}
+
 async function render() {
   const container = document.getElementById('workspace-container');
   container.innerHTML = '';
@@ -147,14 +153,16 @@ async function render() {
 
   const chromeGroupsPromise = hasNativeGroups ? chrome.tabGroups.query({}) : Promise.resolve([]);
 
-  const [allTabs, chromeGroups, thumbnails, currentTab, wsData, { collapsedLanes = {} }] = await Promise.all([
+  const [allTabs, chromeGroups, thumbnails, currentTab, wsData, localStore] = await Promise.all([
     chrome.tabs.query({}),
     chromeGroupsPromise,
     getAllThumbnails(),
     chrome.tabs.getCurrent(),
     getWorkspaceData(),
-    chrome.storage.local.get('collapsedLanes'),
+    chrome.storage.local.get(['collapsedLanes', 'tabOrder']),
   ]);
+  const collapsedLanes = localStore.collapsedLanes ?? {};
+  const tabOrder = localStore.tabOrder ?? {};
 
   const meridianUrl = chrome.runtime.getURL('newtab.html');
   const visibleTabs = allTabs.filter(t =>
@@ -195,14 +203,16 @@ async function render() {
     const clusters = clusterTabsByDomain(trulyUnsorted);
     for (const [name, clusterTabs] of clusters) {
       const workspace = { id: `dc_${name}`, name };
-      const lane = createWorkspaceLane(workspace, clusterTabs, thumbnails, handleTabClosed,
+      const sorted = sortByTabOrder(clusterTabs, tabOrder[workspace.id]);
+      const lane = createWorkspaceLane(workspace, sorted, thumbnails, handleTabClosed,
         { collapsed: collapsedLanes[workspace.id] ?? false });
       lane.addEventListener('workspace-reassigned', scheduleRender);
       container.appendChild(lane);
     }
   } else if (trulyUnsorted.length > 0) {
     const workspace = { id: 'unsorted', name: 'Unsorted' };
-    const lane = createWorkspaceLane(workspace, trulyUnsorted, thumbnails, handleTabClosed,
+    const sorted = sortByTabOrder(trulyUnsorted, tabOrder['unsorted']);
+    const lane = createWorkspaceLane(workspace, sorted, thumbnails, handleTabClosed,
       { collapsed: collapsedLanes[workspace.id] ?? false });
     lane.addEventListener('workspace-reassigned', scheduleRender);
     container.appendChild(lane);
@@ -210,7 +220,7 @@ async function render() {
 
   // 2. Meridian workspace lanes (always shown, even if empty)
   for (const ws of customWorkspaces) {
-    const wsTabs = wsTabMap.get(ws.id) ?? [];
+    const wsTabs = sortByTabOrder(wsTabMap.get(ws.id) ?? [], tabOrder[ws.id]);
     const lane = createWorkspaceLane(
       { id: ws.id, name: ws.name },
       wsTabs,
@@ -294,11 +304,14 @@ async function init() {
     if (info.title || info.favIconUrl || info.groupId !== undefined) scheduleRender();
   });
 
+  chrome.tabs.onMoved.addListener(scheduleRender);
+
   if (hasNativeGroups) {
     chrome.tabGroups.onCreated.addListener(scheduleRender);
     chrome.tabGroups.onRemoved.addListener(scheduleRender);
     chrome.tabGroups.onUpdated.addListener(scheduleRender);
   }
+
 
   window.addEventListener('settings-changed', scheduleRender);
 
@@ -309,7 +322,7 @@ async function init() {
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
     const keys = Object.keys(changes);
-    if (keys.some(k => k.startsWith('thumb_') || k === 'workspaces')) {
+    if (keys.some(k => k.startsWith('thumb_') || k === 'workspaces' || k === 'tabOrder')) {
       scheduleRender();
     }
   });

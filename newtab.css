@@ -655,6 +655,12 @@ body {
   opacity: 0.5;
 }
 
+.drag-placeholder {
+  border-radius: var(--radius);
+  border: 2px dashed var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
 .workspace-lane.drag-over .tab-grid {
   outline: 2px dashed var(--accent);
   outline-offset: 2px;
