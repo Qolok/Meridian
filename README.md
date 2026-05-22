@@ -56,7 +56,7 @@ Trigger a full thumbnail refresh from settings. The background service worker ca
 
 Meridian is a local extension with no build step required.
 
-1. Clone or download this repository.
+1. Download the [latest release](https://github.com/Qolok/Meridian/releases).
 2. Open Chrome and navigate to `chrome://extensions`.
 3. Enable **Developer mode** (toggle in the top-right corner).
 4. Click **Load unpacked** and select the repository folder.
