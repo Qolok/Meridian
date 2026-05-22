@@ -1,4 +1,5 @@
 import { createTabCard } from './TabCard.js';
+import { createNewTabCard } from './NewTabCard.js';
 import { renameWorkspace } from '../utils/workspaceManager.js';
 
 const GROUP_COLORS = {
@@ -13,19 +14,32 @@ const GROUP_COLORS = {
   orange: '#ff6d00',
 };
 
+const CHEVRON = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
+
 export function createWorkspaceLane(workspace, tabs, thumbnails, onTabClosed, { chromeGroup } = {}) {
   const lane = document.createElement('div');
   lane.className = 'workspace-lane';
   lane.dataset.workspaceId = workspace.id;
 
+  let collapsed = false;
+
+  // ---- Header ----
   const header = document.createElement('div');
   header.className = 'lane-header';
+
+  const collapseBtn = document.createElement('button');
+  collapseBtn.className = 'lane-collapse-btn';
+  collapseBtn.innerHTML = CHEVRON;
+  collapseBtn.setAttribute('aria-label', 'Collapse lane');
 
   if (chromeGroup?.color) {
     const dot = document.createElement('span');
     dot.className = 'lane-group-dot';
     dot.style.background = GROUP_COLORS[chromeGroup.color] ?? '#9aa0a6';
+    header.appendChild(collapseBtn);
     header.appendChild(dot);
+  } else {
+    header.appendChild(collapseBtn);
   }
 
   const title = document.createElement('button');
@@ -48,13 +62,25 @@ export function createWorkspaceLane(workspace, tabs, thumbnails, onTabClosed, { 
   header.appendChild(count);
   lane.appendChild(header);
 
+  // ---- Collapse logic ----
   const grid = document.createElement('div');
   grid.className = 'tab-grid';
 
+  collapseBtn.addEventListener('click', () => {
+    collapsed = !collapsed;
+    grid.classList.toggle('hidden', collapsed);
+    collapseBtn.classList.toggle('lane-collapse-btn--collapsed', collapsed);
+    collapseBtn.setAttribute('aria-label', collapsed ? 'Expand lane' : 'Collapse lane');
+  });
+
+  // ---- Tab cards ----
   for (const tab of tabs) {
     const thumb = thumbnails[tab.id] ?? null;
     const card = createTabCard(tab, thumb);
     grid.appendChild(card);
+  }
+  for (const el of createNewTabCard(chromeGroup?.id ?? null)) {
+    grid.appendChild(el);
   }
 
   lane.appendChild(grid);
@@ -73,7 +99,6 @@ export function createWorkspaceLane(workspace, tabs, thumbnails, onTabClosed, { 
     lane.classList.remove('drag-over');
     const tabId = parseInt(e.dataTransfer.getData('text/plain'), 10);
     if (!tabId) return;
-
     if (chromeGroup) {
       await chrome.tabs.group({ tabIds: [tabId], groupId: chromeGroup.id });
     } else {

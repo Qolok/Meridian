@@ -120,8 +120,10 @@ async function render() {
     getAllThumbnails(),
   ]);
 
-  const visibleTabs = allTabs.filter(
-    t => !(t.pinned && (t.url === 'chrome://newtab/' || t.pendingUrl === 'chrome://newtab/'))
+  const meridianUrl = chrome.runtime.getURL('newtab.html');
+  const visibleTabs = allTabs.filter(t =>
+    t.url !== meridianUrl && t.pendingUrl !== meridianUrl &&
+    t.url !== 'chrome://newtab/' && t.pendingUrl !== 'chrome://newtab/'
   );
 
   const groupMap = new Map(chromeGroups.map(g => [g.id, g]));
@@ -137,17 +139,7 @@ async function render() {
     }
   }
 
-  // Chrome tab group lanes
-  for (const [groupId, tabs] of groupedMap) {
-    const group = groupMap.get(groupId);
-    const name = group?.title?.trim() || colorLabel(group?.color);
-    const workspace = { id: `cg_${groupId}`, name };
-    const lane = createWorkspaceLane(workspace, tabs, thumbnails, handleTabClosed, { chromeGroup: group });
-    lane.addEventListener('workspace-reassigned', render);
-    container.appendChild(lane);
-  }
-
-  // Ungrouped tabs: domain-cluster or flat Unsorted
+  // Ungrouped tabs first (Unsorted or domain clusters)
   if (groupByDomain) {
     const clusters = clusterTabsByDomain(ungroupedTabs);
     for (const [name, clusterTabs] of clusters) {
@@ -156,13 +148,21 @@ async function render() {
       lane.addEventListener('workspace-reassigned', render);
       container.appendChild(lane);
     }
-  } else {
-    if (ungroupedTabs.length > 0) {
-      const workspace = { id: 'unsorted', name: 'Unsorted' };
-      const lane = createWorkspaceLane(workspace, ungroupedTabs, thumbnails, handleTabClosed);
-      lane.addEventListener('workspace-reassigned', render);
-      container.appendChild(lane);
-    }
+  } else if (ungroupedTabs.length > 0) {
+    const workspace = { id: 'unsorted', name: 'Unsorted' };
+    const lane = createWorkspaceLane(workspace, ungroupedTabs, thumbnails, handleTabClosed);
+    lane.addEventListener('workspace-reassigned', render);
+    container.appendChild(lane);
+  }
+
+  // Chrome tab group lanes below
+  for (const [groupId, tabs] of groupedMap) {
+    const group = groupMap.get(groupId);
+    const name = group?.title?.trim() || colorLabel(group?.color);
+    const workspace = { id: `cg_${groupId}`, name };
+    const lane = createWorkspaceLane(workspace, tabs, thumbnails, handleTabClosed, { chromeGroup: group });
+    lane.addEventListener('workspace-reassigned', render);
+    container.appendChild(lane);
   }
 }
 
@@ -196,6 +196,18 @@ async function init() {
   chrome.tabGroups.onUpdated.addListener(render);
 
   window.addEventListener('settings-changed', render);
+
+  // Re-render when Meridian regains focus so new thumbnails appear
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) render();
+  });
+
+  // Re-render whenever a thumbnail is written to storage
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && Object.keys(changes).some(k => k.startsWith('thumb_'))) {
+      render();
+    }
+  });
 }
 
 init();

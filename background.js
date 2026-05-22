@@ -37,23 +37,33 @@ chrome.commands.onCommand.addListener(async (command) => {
   }
 });
 
-chrome.tabs.onActivated.addListener((activeInfo) => {
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  if (meridianTabId === null) {
+    const pinned = await chrome.tabs.query({ pinned: true });
+    const m = pinned.find(t => t.url === 'chrome://newtab/' || t.pendingUrl === 'chrome://newtab/');
+    if (m) meridianTabId = m.id;
+  }
   if (activeInfo.tabId === meridianTabId) return;
   setTimeout(() => {
     chrome.tabs.captureVisibleTab(activeInfo.windowId, { format: 'jpeg', quality: 60 })
       .then(dataUrl => chrome.storage.local.set({ ['thumb_' + activeInfo.tabId]: dataUrl }))
-      .catch(() => {});
+      .catch(err => console.warn('[Meridian] captureVisibleTab failed:', err.message));
   }, 300);
 });
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.active && tabId !== meridianTabId) {
-    setTimeout(() => {
-      chrome.tabs.captureVisibleTab(tab.windowId, { format: 'jpeg', quality: 60 })
-        .then(dataUrl => chrome.storage.local.set({ ['thumb_' + tabId]: dataUrl }))
-        .catch(() => {});
-    }, 500);
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  if (changeInfo.status !== 'complete' || !tab.active) return;
+  if (meridianTabId === null) {
+    const pinned = await chrome.tabs.query({ pinned: true });
+    const m = pinned.find(t => t.url === 'chrome://newtab/' || t.pendingUrl === 'chrome://newtab/');
+    if (m) meridianTabId = m.id;
   }
+  if (tabId === meridianTabId) return;
+  setTimeout(() => {
+    chrome.tabs.captureVisibleTab(tab.windowId, { format: 'jpeg', quality: 60 })
+      .then(dataUrl => chrome.storage.local.set({ ['thumb_' + tabId]: dataUrl }))
+      .catch(err => console.warn('[Meridian] captureVisibleTab failed:', err.message));
+  }, 500);
 });
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
