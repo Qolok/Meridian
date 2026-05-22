@@ -66,7 +66,26 @@ export function createTabCard(tab, thumbnail) {
     }));
   });
 
+  let hoverTimer = null;
+
+  card.addEventListener('mouseenter', () => {
+    hoverTimer = setTimeout(() => {
+      hoverTimer = null;
+      card.dispatchEvent(new CustomEvent('tab-lightbox-show', {
+        bubbles: true,
+        detail: { tab, thumbnail, rect: card.getBoundingClientRect() },
+      }));
+    }, 1000);
+  });
+
+  card.addEventListener('mouseleave', () => {
+    clearTimeout(hoverTimer);
+    hoverTimer = null;
+  });
+
   card.addEventListener('dragstart', (e) => {
+    clearTimeout(hoverTimer);
+    hoverTimer = null;
     e.dataTransfer.setData('text/plain', String(tab.id));
     card.classList.add('dragging');
   });

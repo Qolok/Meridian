@@ -1,12 +1,106 @@
 import { createSearchBar } from './components/SearchBar.js';
 import { createWorkspaceLane } from './components/WorkspaceLane.js';
-import { createSettingsPanel } from './components/SettingsPanel.js';
+import { createSettingsPanel, applyTheme, applyBackground } from './components/SettingsPanel.js';
 import { clusterTabsByDomain } from './utils/domainCluster.js';
 import { getAllThumbnails } from './utils/thumbnailCache.js';
 import { getWorkspaceData, createWorkspace, assignTab } from './utils/workspaceManager.js';
 import { show as showContextMenu } from './components/ContextMenu.js';
 
 const hasNativeGroups = typeof chrome.tabGroups !== 'undefined';
+
+let lightboxApi = null;
+
+async function applyStoredAppearance() {
+  const { theme, background } = await chrome.storage.sync.get(['theme', 'background']);
+  applyTheme(theme ?? 'system');
+  applyBackground(background ?? { type: 'none', value: '' });
+}
+
+function setupLightbox() {
+  const lightbox      = document.getElementById('tab-lightbox');
+  const thumbEl       = document.getElementById('lightbox-thumbnail');
+  const placeholderEl = document.getElementById('lightbox-placeholder');
+  const faviconEl     = document.getElementById('lightbox-favicon');
+  const titleEl       = document.getElementById('lightbox-title');
+  const urlEl         = document.getElementById('lightbox-url');
+  const LIGHTBOX_W = 400;
+  const MARGIN = 8;
+  let currentTab = null;
+  let closeTimer = null;
+
+  function navigate() {
+    if (currentTab) chrome.tabs.update(currentTab.id, { active: true });
+    hideLightbox();
+  }
+
+  function showLightbox({ tab, thumbnail, rect }) {
+    currentTab = tab;
+    clearTimeout(closeTimer);
+
+    if (thumbnail) {
+      thumbEl.src = thumbnail;
+      thumbEl.classList.remove('hidden');
+      placeholderEl.classList.add('hidden');
+    } else {
+      thumbEl.src = '';
+      thumbEl.classList.add('hidden');
+      placeholderEl.textContent = (tab.title || '?').charAt(0).toUpperCase();
+      placeholderEl.classList.remove('hidden');
+    }
+
+    if (tab.favIconUrl) {
+      faviconEl.src = tab.favIconUrl;
+      faviconEl.style.display = '';
+    } else {
+      faviconEl.style.display = 'none';
+    }
+
+    titleEl.textContent = tab.title || tab.url || 'New Tab';
+    urlEl.textContent   = tab.url || '';
+
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    // thumbnail height + body section (title + meta + padding)
+    const approxH = Math.round(LIGHTBOX_W * 10 / 16) + 80;
+
+    // Center both horizontally and vertically on the card
+    const cardCX = rect.left + rect.width  / 2;
+    const cardCY = rect.top  + rect.height / 2;
+
+    let left = cardCX - LIGHTBOX_W / 2;
+    left = Math.max(MARGIN, Math.min(left, vw - LIGHTBOX_W - MARGIN));
+
+    let top = cardCY - approxH / 2;
+    top = Math.max(MARGIN, Math.min(top, vh - approxH - MARGIN));
+
+    // Transform-origin at the card's center so it appears to grow from the card
+    const originX = Math.round(((rect.left + rect.width  / 2) - left) / LIGHTBOX_W * 100);
+    const originY = Math.round(((rect.top  + rect.height / 2) - top)  / approxH   * 100);
+    lightbox.style.transformOrigin = `${originX}% ${originY}%`;
+
+    lightbox.style.left = `${left}px`;
+    lightbox.style.top  = `${top}px`;
+    lightbox.classList.remove('hidden');
+  }
+
+  function hideLightbox() {
+    lightbox.classList.add('hidden');
+    currentTab = null;
+  }
+
+  lightbox.addEventListener('mouseleave', () => { closeTimer = setTimeout(hideLightbox, 150); });
+  lightbox.addEventListener('mouseenter', () => clearTimeout(closeTimer));
+
+  lightbox.addEventListener('click', navigate);
+
+  document.addEventListener('tab-lightbox-show', (e) => showLightbox(e.detail));
+  document.addEventListener('dragstart', hideLightbox);
+
+  return {
+    hide: hideLightbox,
+    isVisible: () => !lightbox.classList.contains('hidden'),
+  };
+}
 
 async function handleNewTabBehavior() {
   const { newTabBehavior, homepageUrl } = await chrome.storage.sync.get(['newTabBehavior', 'homepageUrl']);
@@ -49,6 +143,7 @@ function setupKeyboardNav() {
     }
 
     if (e.key === 'Escape') {
+      if (lightboxApi?.isVisible()) { lightboxApi.hide(); return; }
       const overlay = document.getElementById('settings-overlay');
       if (!overlay.classList.contains('hidden')) { closeSettings(); return; }
       if (document.activeElement?.tagName === 'INPUT') {
@@ -246,7 +341,10 @@ async function render() {
 }
 
 async function init() {
+  await applyStoredAppearance();
   await handleNewTabBehavior();
+
+  lightboxApi = setupLightbox();
 
   searchBarApi = createSearchBar(document.getElementById('search-bar'));
 
