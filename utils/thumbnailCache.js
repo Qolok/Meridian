@@ -1,4 +1,4 @@
-const PREFIX = 'thumb_';
+const PREFIX = "thumb_";
 
 export async function getThumbnail(tabId) {
   const key = PREFIX + tabId;

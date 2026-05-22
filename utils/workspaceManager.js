@@ -1,9 +1,9 @@
-const STORAGE_KEY = 'workspaces';
+const STORAGE_KEY = "workspaces";
 const SCHEMA_VERSION = 2;
 
 const DEFAULT_DATA = {
   version: SCHEMA_VERSION,
-  workspaces: [{ id: 'unsorted', name: 'Unsorted' }],
+  workspaces: [{ id: "unsorted", name: "Unsorted" }],
   assignments: {},
 };
 
@@ -15,8 +15,8 @@ export async function getWorkspaceData() {
     await chrome.storage.local.set({ [STORAGE_KEY]: DEFAULT_DATA });
     return structuredClone(DEFAULT_DATA);
   }
-  if (!data.workspaces.find(w => w.id === 'unsorted')) {
-    data.workspaces.unshift({ id: 'unsorted', name: 'Unsorted' });
+  if (!data.workspaces.find((w) => w.id === "unsorted")) {
+    data.workspaces.unshift({ id: "unsorted", name: "Unsorted" });
   }
   return data;
 }
@@ -48,24 +48,24 @@ export async function createWorkspace(name) {
 
 export async function renameWorkspace(workspaceId, newName) {
   const data = await getWorkspaceData();
-  const ws = data.workspaces.find(w => w.id === workspaceId);
+  const ws = data.workspaces.find((w) => w.id === workspaceId);
   if (ws) ws.name = newName;
   await saveWorkspaceData(data);
 }
 
 export async function deleteWorkspace(workspaceId) {
-  if (workspaceId === 'unsorted') return;
+  if (workspaceId === "unsorted") return;
   const data = await getWorkspaceData();
-  data.workspaces = data.workspaces.filter(w => w.id !== workspaceId);
+  data.workspaces = data.workspaces.filter((w) => w.id !== workspaceId);
   for (const [tabId, wsId] of Object.entries(data.assignments)) {
-    if (wsId === workspaceId) data.assignments[tabId] = 'unsorted';
+    if (wsId === workspaceId) data.assignments[tabId] = "unsorted";
   }
   await saveWorkspaceData(data);
 }
 
 export async function getTabWorkspace(tabId) {
   const data = await getWorkspaceData();
-  return data.assignments[String(tabId)] ?? 'unsorted';
+  return data.assignments[String(tabId)] ?? "unsorted";
 }
 
 export async function initFromTabs(tabs, clusterFn) {
@@ -74,7 +74,7 @@ export async function initFromTabs(tabs, clusterFn) {
 
   const clusters = clusterFn(tabs);
   for (const [name, clusterTabs] of clusters) {
-    if (name === 'Unsorted') continue;
+    if (name === "Unsorted") continue;
     const ws = { id: crypto.randomUUID(), name };
     data.workspaces.push(ws);
     for (const tab of clusterTabs) {

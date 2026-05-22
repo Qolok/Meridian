@@ -1,4 +1,6 @@
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -45,7 +47,10 @@ html[data-theme="dark"] {
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   background-color: var(--bg);
   background-image: var(--bg-image, none);
   background-size: cover;
@@ -147,7 +152,9 @@ body {
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   flex-shrink: 0;
-  transition: background var(--transition), color var(--transition);
+  transition:
+    background var(--transition),
+    color var(--transition);
 }
 
 .search-submit-btn:hover {
@@ -214,7 +221,9 @@ body {
   padding: 2px 4px;
   border-radius: var(--radius-sm);
   font-family: inherit;
-  transition: background var(--transition), color var(--transition);
+  transition:
+    background var(--transition),
+    color var(--transition);
 }
 
 .lane-title:focus {
@@ -236,7 +245,10 @@ body {
   height: 20px;
   flex-shrink: 0;
   border-radius: var(--radius-sm);
-  transition: color var(--transition), background var(--transition), transform var(--transition);
+  transition:
+    color var(--transition),
+    background var(--transition),
+    transform var(--transition);
 }
 
 .lane-collapse-btn:hover {
@@ -275,14 +287,15 @@ body {
   align-items: center;
   justify-content: center;
   padding: 0;
-  transition: background var(--transition), color var(--transition);
+  transition:
+    background var(--transition),
+    color var(--transition);
 }
 
 .new-tab-idle-btn:hover {
   background: var(--surface-hover);
   color: var(--text-primary);
 }
-
 
 .new-tab-url-input {
   width: 100%;
@@ -321,7 +334,9 @@ body {
   padding: 0 2px;
   margin-left: auto;
   opacity: 0;
-  transition: opacity var(--transition), color var(--transition);
+  transition:
+    opacity var(--transition),
+    color var(--transition);
 }
 
 .workspace-lane:hover .lane-delete-btn {
@@ -350,7 +365,9 @@ body {
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: transform var(--transition), box-shadow var(--transition);
+  transition:
+    transform var(--transition),
+    box-shadow var(--transition);
   -webkit-user-select: none;
   user-select: none;
 }
@@ -427,7 +444,9 @@ body {
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity var(--transition), background var(--transition);
+  transition:
+    opacity var(--transition),
+    background var(--transition);
   line-height: 1;
   padding: 0;
 }
@@ -440,7 +459,6 @@ body {
 .card-close-btn:hover {
   background: rgba(0, 0, 0, 0.75);
 }
-
 
 /* ---- Settings ---- */
 
@@ -460,7 +478,9 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 50;
-  transition: background var(--transition), color var(--transition);
+  transition:
+    background var(--transition),
+    color var(--transition);
 }
 
 #new-group-btn:hover {
@@ -484,7 +504,9 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 50;
-  transition: background var(--transition), color var(--transition);
+  transition:
+    background var(--transition),
+    color var(--transition);
 }
 
 #settings-btn:hover {
@@ -674,7 +696,9 @@ body {
   font-family: inherit;
   cursor: pointer;
   text-align: left;
-  transition: background var(--transition), color var(--transition);
+  transition:
+    background var(--transition),
+    color var(--transition);
 }
 
 .settings-action-btn:hover:not(:disabled) {
@@ -713,7 +737,10 @@ body {
   justify-content: center;
   color: var(--text-secondary);
   font-size: 13px;
-  transition: border-color var(--transition), background var(--transition), color var(--transition);
+  transition:
+    border-color var(--transition),
+    background var(--transition),
+    color var(--transition);
 }
 
 #new-group-drop-zone.drag-over {
@@ -785,18 +812,28 @@ body {
   width: 400px;
   border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 6px 32px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 6px 32px rgba(0, 0, 0, 0.55),
+    0 2px 8px rgba(0, 0, 0, 0.3);
   cursor: pointer;
   animation: lightbox-appear 200ms cubic-bezier(0.2, 0, 0.2, 1) forwards;
 }
 
 @keyframes lightbox-appear {
-  from { transform: scale(0.64); opacity: 0; }
-  to   { transform: scale(1);    opacity: 1; }
+  from {
+    transform: scale(0.64);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #tab-lightbox { animation: none; }
+  #tab-lightbox {
+    animation: none;
+  }
 }
 
 .lightbox-media {
@@ -880,7 +917,10 @@ body {
   font-family: inherit;
   cursor: pointer;
   text-align: center;
-  transition: background var(--transition), border-color var(--transition), color var(--transition);
+  transition:
+    background var(--transition),
+    border-color var(--transition),
+    color var(--transition);
 }
 
 .settings-theme-btn:hover {
@@ -908,7 +948,9 @@ body {
   border: 2px solid transparent;
   cursor: pointer;
   overflow: hidden;
-  transition: border-color var(--transition), transform var(--transition);
+  transition:
+    border-color var(--transition),
+    transform var(--transition);
   background-size: cover;
   background-position: center;
   padding: 0;
@@ -993,7 +1035,10 @@ body {
   font-family: inherit;
   cursor: pointer;
   text-align: center;
-  transition: border-color var(--transition), color var(--transition), background var(--transition);
+  transition:
+    border-color var(--transition),
+    color var(--transition),
+    background var(--transition);
 }
 
 .settings-bg-upload-btn:hover:not(:disabled) {
