@@ -295,6 +295,27 @@ body {
   opacity: 0.7;
 }
 
+.lane-delete-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity var(--transition), color var(--transition);
+}
+
+.workspace-lane:hover .lane-delete-btn {
+  opacity: 1;
+}
+
+.lane-delete-btn:hover {
+  color: var(--text-primary);
+}
+
 .tab-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -406,6 +427,30 @@ body {
 
 
 /* ---- Settings ---- */
+
+#new-group-btn {
+  position: fixed;
+  top: 16px;
+  right: 60px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  transition: background var(--transition), color var(--transition);
+}
+
+#new-group-btn:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
 
 #settings-btn {
   position: fixed;
@@ -592,6 +637,62 @@ body {
 .workspace-lane.drag-over .tab-grid {
   outline: 2px dashed var(--accent);
   outline-offset: 2px;
+}
+
+#new-group-drop-zone {
+  margin: 0 24px 40px;
+  padding: 20px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+  transition: border-color var(--transition), background var(--transition), color var(--transition);
+}
+
+#new-group-drop-zone.drag-over {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--accent);
+}
+
+/* ---- Context menu ---- */
+
+.context-menu {
+  position: fixed;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow-hover);
+  z-index: 300;
+  min-width: 180px;
+  padding: 4px 0;
+}
+
+.context-menu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.context-menu-item:hover {
+  background: var(--surface-hover);
+}
+
+.context-menu-separator {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
 }
 
 /* ---- Utilities ---- */

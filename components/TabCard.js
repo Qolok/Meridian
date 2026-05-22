@@ -58,6 +58,14 @@ export function createTabCard(tab, thumbnail) {
     }
   });
 
+  card.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    card.dispatchEvent(new CustomEvent('tab-context-menu', {
+      bubbles: true,
+      detail: { tab, x: e.clientX, y: e.clientY },
+    }));
+  });
+
   card.addEventListener('dragstart', (e) => {
     e.dataTransfer.setData('text/plain', String(tab.id));
     card.classList.add('dragging');

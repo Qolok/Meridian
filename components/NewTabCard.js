@@ -1,5 +1,6 @@
-export function createNewTabCard(groupId = null) {
-  // Idle: small round button centered in its grid cell
+// existingTabId: when set, the card navigates that tab instead of creating a new one.
+// Used for the about:blank placeholder tab created when a new Chrome group is opened.
+export function createNewTabCard(groupId = null, existingTabId = null) {
   const idleEl = document.createElement('div');
   idleEl.className = 'new-tab-card';
 
@@ -9,7 +10,6 @@ export function createNewTabCard(groupId = null) {
   idleBtn.setAttribute('aria-label', 'New tab');
   idleEl.appendChild(idleBtn);
 
-  // Active: full-sized card with URL input where the tab name would be
   const activeEl = document.createElement('div');
   activeEl.className = 'tab-card new-tab-active hidden';
   activeEl.tabIndex = 0;
@@ -27,11 +27,6 @@ export function createNewTabCard(groupId = null) {
   cardInfo.appendChild(urlInput);
   activeEl.appendChild(cardInfo);
 
-  // The wrapper exposes whichever element is current
-  const wrapper = document.createDocumentFragment();
-  wrapper._idle = idleEl;
-  wrapper._active = activeEl;
-
   function activate() {
     idleEl.classList.add('hidden');
     activeEl.classList.remove('hidden');
@@ -39,6 +34,13 @@ export function createNewTabCard(groupId = null) {
   }
 
   function deactivate() {
+    if (existingTabId !== null) {
+      // Just hide the active card — no idle "+" revealed, placeholder tab kept alive
+      // so the group isn't destroyed while the user clicks away to drag tabs in.
+      activeEl.classList.add('hidden');
+      urlInput.value = '';
+      return;
+    }
     activeEl.classList.add('hidden');
     idleEl.classList.remove('hidden');
     urlInput.value = '';
@@ -53,7 +55,11 @@ export function createNewTabCard(groupId = null) {
 
   async function openTab(raw) {
     const value = raw.trim();
-    if (!value) { deactivate(); return; }
+    if (!value) {
+      if (existingTabId !== null) chrome.tabs.remove(existingTabId).catch(() => {});
+      deactivate();
+      return;
+    }
     let url;
     if (/^https?:\/\//i.test(value)) {
       url = value;
@@ -64,9 +70,14 @@ export function createNewTabCard(groupId = null) {
       const base = SEARCH_URLS[searchProvider] ?? SEARCH_URLS.google;
       url = base + encodeURIComponent(value);
     }
-    const tab = await chrome.tabs.create({ url });
-    if (groupId !== null) {
-      chrome.tabs.group({ tabIds: [tab.id], groupId }).catch(() => {});
+
+    if (existingTabId !== null) {
+      await chrome.tabs.update(existingTabId, { url, active: true });
+    } else {
+      const tab = await chrome.tabs.create({ url });
+      if (groupId !== null) {
+        chrome.tabs.group({ tabIds: [tab.id], groupId }).catch(() => {});
+      }
     }
     deactivate();
   }
@@ -77,10 +88,12 @@ export function createNewTabCard(groupId = null) {
   urlInput.addEventListener('keydown', (e) => {
     e.stopPropagation();
     if (e.key === 'Enter') openTab(urlInput.value);
-    if (e.key === 'Escape') deactivate();
+    if (e.key === 'Escape') {
+      if (existingTabId !== null) chrome.tabs.remove(existingTabId).catch(() => {});
+      deactivate();
+    }
   });
   urlInput.addEventListener('blur', () => setTimeout(deactivate, 150));
 
-  // Return a plain array so WorkspaceLane can append both siblings into the grid
   return [idleEl, activeEl];
 }

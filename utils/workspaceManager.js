@@ -1,17 +1,20 @@
 const STORAGE_KEY = 'workspaces';
+const SCHEMA_VERSION = 2;
 
 const DEFAULT_DATA = {
+  version: SCHEMA_VERSION,
   workspaces: [{ id: 'unsorted', name: 'Unsorted' }],
   assignments: {},
 };
 
 export async function getWorkspaceData() {
   const result = await chrome.storage.local.get(STORAGE_KEY);
-  if (!result[STORAGE_KEY]) {
+  const data = result[STORAGE_KEY];
+  // Clear stale data from old schema (auto-populated from initFromTabs)
+  if (!data || data.version !== SCHEMA_VERSION) {
     await chrome.storage.local.set({ [STORAGE_KEY]: DEFAULT_DATA });
     return structuredClone(DEFAULT_DATA);
   }
-  const data = result[STORAGE_KEY];
   if (!data.workspaces.find(w => w.id === 'unsorted')) {
     data.workspaces.unshift({ id: 'unsorted', name: 'Unsorted' });
   }
@@ -19,6 +22,7 @@ export async function getWorkspaceData() {
 }
 
 export async function saveWorkspaceData(data) {
+  data.version = SCHEMA_VERSION;
   await chrome.storage.local.set({ [STORAGE_KEY]: data });
 }
 

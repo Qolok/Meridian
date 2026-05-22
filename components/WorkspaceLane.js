@@ -1,6 +1,8 @@
 import { createTabCard } from './TabCard.js';
 import { createNewTabCard } from './NewTabCard.js';
-import { renameWorkspace } from '../utils/workspaceManager.js';
+import { renameWorkspace, deleteWorkspace, assignTab, unassignTab } from '../utils/workspaceManager.js';
+
+const hasNativeGroups = typeof chrome.tabGroups !== 'undefined';
 
 const GROUP_COLORS = {
   grey: '#9aa0a6',
@@ -16,7 +18,7 @@ const GROUP_COLORS = {
 
 const CHEVRON = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
 
-export function createWorkspaceLane(workspace, tabs, thumbnails, onTabClosed, { chromeGroup } = {}) {
+export function createWorkspaceLane(workspace, tabs, thumbnails, onTabClosed, { chromeGroup, meridianWorkspace } = {}) {
   const lane = document.createElement('div');
   lane.className = 'workspace-lane';
   lane.dataset.workspaceId = workspace.id;
@@ -60,6 +62,22 @@ export function createWorkspaceLane(workspace, tabs, thumbnails, onTabClosed, { 
 
   header.appendChild(title);
   header.appendChild(count);
+
+  // Delete button for user-created Meridian workspaces only
+  if (meridianWorkspace) {
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'lane-delete-btn';
+    deleteBtn.textContent = '×';
+    deleteBtn.setAttribute('aria-label', `Delete group ${workspace.name}`);
+    deleteBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!confirm(`Delete group "${workspace.name}"? Tabs will move to Unsorted.`)) return;
+      await deleteWorkspace(workspace.id);
+      lane.dispatchEvent(new CustomEvent('workspace-reassigned', { bubbles: true }));
+    });
+    header.appendChild(deleteBtn);
+  }
+
   lane.appendChild(header);
 
   // ---- Collapse logic ----
@@ -75,9 +93,16 @@ export function createWorkspaceLane(workspace, tabs, thumbnails, onTabClosed, { 
 
   // ---- Tab cards ----
   for (const tab of tabs) {
-    const thumb = thumbnails[tab.id] ?? null;
-    const card = createTabCard(tab, thumb);
-    grid.appendChild(card);
+    const isPlaceholder = chromeGroup &&
+      (tab.url === 'about:blank' || tab.pendingUrl === 'about:blank' || (!tab.url && !tab.pendingUrl));
+    if (isPlaceholder) {
+      const [, activeEl] = createNewTabCard(chromeGroup.id, tab.id);
+      activeEl.classList.remove('hidden');
+      grid.appendChild(activeEl); // idle "+" intentionally omitted — no duplicate
+    } else {
+      const thumb = thumbnails[tab.id] ?? null;
+      grid.appendChild(createTabCard(tab, thumb));
+    }
   }
   for (const el of createNewTabCard(chromeGroup?.id ?? null)) {
     grid.appendChild(el);
@@ -99,11 +124,22 @@ export function createWorkspaceLane(workspace, tabs, thumbnails, onTabClosed, { 
     lane.classList.remove('drag-over');
     const tabId = parseInt(e.dataTransfer.getData('text/plain'), 10);
     if (!tabId) return;
+
     if (chromeGroup) {
       await chrome.tabs.group({ tabIds: [tabId], groupId: chromeGroup.id });
+      await unassignTab(tabId);
+      // Remove any about:blank placeholder tab now that a real tab has been added
+      const groupTabs = await chrome.tabs.query({ groupId: chromeGroup.id });
+      const placeholder = groupTabs.find(t => t.url === 'about:blank' && t.id !== tabId);
+      if (placeholder) await chrome.tabs.remove(placeholder.id).catch(() => {});
+    } else if (meridianWorkspace) {
+      if (hasNativeGroups) await chrome.tabs.ungroup([tabId]).catch(() => {});
+      await assignTab(tabId, meridianWorkspace.id);
     } else {
-      await chrome.tabs.ungroup([tabId]);
+      if (hasNativeGroups) await chrome.tabs.ungroup([tabId]).catch(() => {});
+      await unassignTab(tabId);
     }
+
     lane.dispatchEvent(new CustomEvent('workspace-reassigned', { bubbles: true }));
   });
 
