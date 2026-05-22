@@ -1,7 +1,7 @@
 let meridianTabId = null;
 
 function getMeridianUrl() {
-  return chrome.runtime.getURL('newtab.html');
+  return chrome.runtime.getURL('meridian.html');
 }
 
 function isMeridianTab(tab) {

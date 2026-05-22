@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Spatial tab command center",
   "chrome_url_overrides": {
-    "newtab": "newtab.html"
+    "newtab": "meridian.html"
   },
   "background": {
     "service_worker": "background.js"

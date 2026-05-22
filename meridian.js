@@ -168,16 +168,20 @@ function navigateCards(key) {
   if (!cards.includes(focused)) { cards[0].focus(); return; }
 
   const grid = focused.closest('.tab-grid');
+  const lane = focused.closest('.workspace-lane');
   const gridCards = [...grid.querySelectorAll('.tab-card')];
-  const cols = Math.round(grid.offsetWidth / (focused.offsetWidth + 10)) || 1;
   const gridIdx = gridCards.indexOf(focused);
-  const allIdx = cards.indexOf(focused);
 
   let next = null;
-  if (key === 'ArrowRight') next = cards[allIdx + 1];
-  if (key === 'ArrowLeft') next = cards[allIdx - 1];
-  if (key === 'ArrowDown') next = gridCards[gridIdx + cols] ?? cards[allIdx + 1];
-  if (key === 'ArrowUp') next = gridIdx - cols >= 0 ? gridCards[gridIdx - cols] : cards[allIdx - 1];
+  if (key === 'ArrowRight') next = gridCards[gridIdx + 1] ?? null;
+  if (key === 'ArrowLeft') next = gridIdx > 0 ? gridCards[gridIdx - 1] : null;
+
+  if (key === 'ArrowDown' || key === 'ArrowUp') {
+    const lanes = [...document.querySelectorAll('.workspace-lane')];
+    const laneIdx = lanes.indexOf(lane);
+    const targetLane = key === 'ArrowDown' ? lanes[laneIdx + 1] : lanes[laneIdx - 1];
+    if (targetLane) next = targetLane.querySelector('.tab-card');
+  }
 
   next?.focus();
 }
@@ -259,7 +263,7 @@ async function render() {
   const collapsedLanes = localStore.collapsedLanes ?? {};
   const tabOrder = localStore.tabOrder ?? {};
 
-  const meridianUrl = chrome.runtime.getURL('newtab.html');
+  const meridianUrl = chrome.runtime.getURL('meridian.html');
   const visibleTabs = allTabs.filter(t =>
     t.id !== currentTab?.id &&
     t.url !== meridianUrl && t.pendingUrl !== meridianUrl &&
