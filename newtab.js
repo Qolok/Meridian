@@ -114,17 +114,20 @@ async function render() {
 
   const { groupByDomain } = await chrome.storage.sync.get('groupByDomain');
 
-  const [allTabs, chromeGroups, thumbnails] = await Promise.all([
+  const [allTabs, chromeGroups, thumbnails, currentTab] = await Promise.all([
     chrome.tabs.query({}),
     chrome.tabGroups.query({}),
     getAllThumbnails(),
+    chrome.tabs.getCurrent(),
   ]);
 
   const meridianUrl = chrome.runtime.getURL('newtab.html');
   const visibleTabs = allTabs.filter(t =>
+    t.id !== currentTab?.id &&
     t.url !== meridianUrl && t.pendingUrl !== meridianUrl &&
     t.url !== 'chrome://newtab/' && t.pendingUrl !== 'chrome://newtab/'
   );
+  console.log('[Meridian] Rendering', visibleTabs.length, 'tabs,', Object.keys(thumbnails).length, 'thumbnails in storage');
 
   const groupMap = new Map(chromeGroups.map(g => [g.id, g]));
   const groupedMap = new Map();
