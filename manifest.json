@@ -19,5 +19,10 @@
       "description": "Focus Meridian tab"
     }
   },
-  "action": {}
+  "icons": {
+    "128": "img/favicon.svg"
+  },
+  "action": {
+    "default_icon": "img/favicon.svg"
+  }
 }
