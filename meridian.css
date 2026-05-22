@@ -50,6 +50,7 @@ body {
   background-image: var(--bg-image, none);
   background-size: cover;
   background-position: center;
+  background-attachment: fixed;
   color: var(--text-primary);
   min-height: 100vh;
 }
