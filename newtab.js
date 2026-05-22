@@ -9,13 +9,21 @@ import { show as showContextMenu } from './components/ContextMenu.js';
 const hasNativeGroups = typeof chrome.tabGroups !== 'undefined';
 
 async function handleNewTabBehavior() {
-  const { newTabBehavior } = await chrome.storage.sync.get('newTabBehavior');
-  if (newTabBehavior !== 'focus-pinned') return;
-  const currentTab = await chrome.tabs.getCurrent();
-  const [pinned] = await chrome.tabs.query({ pinned: true });
-  if (pinned && currentTab && pinned.id !== currentTab.id) {
-    await chrome.tabs.update(pinned.id, { active: true });
-    window.close();
+  const { newTabBehavior, homepageUrl } = await chrome.storage.sync.get(['newTabBehavior', 'homepageUrl']);
+  if (newTabBehavior === 'focus-pinned') {
+    const currentTab = await chrome.tabs.getCurrent();
+    const [pinned] = await chrome.tabs.query({ pinned: true });
+    if (pinned && currentTab && pinned.id !== currentTab.id) {
+      await chrome.tabs.update(pinned.id, { active: true });
+      window.close();
+    }
+  } else if (newTabBehavior === 'open-homepage' && homepageUrl?.trim()) {
+    const [currentTab, { meridianTabId }] = await Promise.all([
+      chrome.tabs.getCurrent(),
+      chrome.storage.local.get('meridianTabId'),
+    ]);
+    if (!currentTab || currentTab.id === meridianTabId) return;
+    await chrome.tabs.update(currentTab.id, { url: homepageUrl.trim() });
   }
 }
 

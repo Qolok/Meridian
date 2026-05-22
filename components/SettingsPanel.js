@@ -1,11 +1,13 @@
 const NEW_TAB_OPTIONS = [
   { id: 'meridian-view', label: 'Open a new Meridian view' },
   { id: 'focus-pinned', label: 'Always return to pinned Meridian' },
+  { id: 'open-homepage', label: 'Open my homepage' },
 ];
 
 export function createSettingsPanel(container, onClose) {
   let newTabBehavior = 'meridian-view';
   let groupByDomain = false;
+  let homepageUrl = '';
 
   const panel = document.createElement('div');
 
@@ -36,7 +38,7 @@ export function createSettingsPanel(container, onClose) {
   newTabGroup.appendChild(newTabLabel);
 
   function renderNewTabOptions() {
-    newTabGroup.querySelectorAll('.settings-option').forEach(el => el.remove());
+    newTabGroup.querySelectorAll('.settings-option, .settings-homepage-input').forEach(el => el.remove());
     for (const opt of NEW_TAB_OPTIONS) {
       const btn = document.createElement('button');
       btn.className = 'settings-option' + (opt.id === newTabBehavior ? ' selected' : '');
@@ -54,6 +56,22 @@ export function createSettingsPanel(container, onClose) {
         renderNewTabOptions();
       });
       newTabGroup.appendChild(btn);
+    }
+
+    if (newTabBehavior === 'open-homepage') {
+      const input = document.createElement('input');
+      input.type = 'url';
+      input.className = 'settings-homepage-input';
+      input.placeholder = 'https://example.com';
+      input.value = homepageUrl;
+      input.addEventListener('change', () => {
+        homepageUrl = input.value.trim();
+        chrome.storage.sync.set({ homepageUrl });
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') input.blur();
+      });
+      newTabGroup.appendChild(input);
     }
   }
 
@@ -118,9 +136,10 @@ export function createSettingsPanel(container, onClose) {
 
   container.appendChild(panel);
 
-  chrome.storage.sync.get(['newTabBehavior', 'groupByDomain']).then((saved) => {
+  chrome.storage.sync.get(['newTabBehavior', 'groupByDomain', 'homepageUrl']).then((saved) => {
     if (saved.newTabBehavior) newTabBehavior = saved.newTabBehavior;
     groupByDomain = !!saved.groupByDomain;
+    homepageUrl = saved.homepageUrl ?? '';
     toggleCheckbox.checked = groupByDomain;
     renderNewTabOptions();
   });
