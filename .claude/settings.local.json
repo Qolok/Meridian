@@ -9,7 +9,8 @@
       "Bash(git -C \"c:\\\\Users\\\\russp\\\\Documents\\\\Meridian\" log --oneline -5)",
       "Bash(git -C \"c:\\\\Users\\\\russp\\\\Documents\\\\Meridian\" add components/WorkspaceLane.js newtab.css newtab.js)",
       "Bash(git -C \"c:\\\\Users\\\\russp\\\\Documents\\\\Meridian\" commit -m \"Add drag/drop tab reordering within groups with animated gap placeholder\")",
-      "Bash(git -C \"c:\\\\Users\\\\russp\\\\Documents\\\\Meridian\" push)"
+      "Bash(git -C \"c:\\\\Users\\\\russp\\\\Documents\\\\Meridian\" push)",
+      "Bash(git mv *)"
     ]
   }
 }
