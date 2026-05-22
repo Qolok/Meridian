@@ -147,12 +147,13 @@ async function render() {
 
   const chromeGroupsPromise = hasNativeGroups ? chrome.tabGroups.query({}) : Promise.resolve([]);
 
-  const [allTabs, chromeGroups, thumbnails, currentTab, wsData] = await Promise.all([
+  const [allTabs, chromeGroups, thumbnails, currentTab, wsData, { collapsedLanes = {} }] = await Promise.all([
     chrome.tabs.query({}),
     chromeGroupsPromise,
     getAllThumbnails(),
     chrome.tabs.getCurrent(),
     getWorkspaceData(),
+    chrome.storage.local.get('collapsedLanes'),
   ]);
 
   const meridianUrl = chrome.runtime.getURL('newtab.html');
@@ -194,13 +195,15 @@ async function render() {
     const clusters = clusterTabsByDomain(trulyUnsorted);
     for (const [name, clusterTabs] of clusters) {
       const workspace = { id: `dc_${name}`, name };
-      const lane = createWorkspaceLane(workspace, clusterTabs, thumbnails, handleTabClosed);
+      const lane = createWorkspaceLane(workspace, clusterTabs, thumbnails, handleTabClosed,
+        { collapsed: collapsedLanes[workspace.id] ?? false });
       lane.addEventListener('workspace-reassigned', scheduleRender);
       container.appendChild(lane);
     }
   } else if (trulyUnsorted.length > 0) {
     const workspace = { id: 'unsorted', name: 'Unsorted' };
-    const lane = createWorkspaceLane(workspace, trulyUnsorted, thumbnails, handleTabClosed);
+    const lane = createWorkspaceLane(workspace, trulyUnsorted, thumbnails, handleTabClosed,
+      { collapsed: collapsedLanes[workspace.id] ?? false });
     lane.addEventListener('workspace-reassigned', scheduleRender);
     container.appendChild(lane);
   }
@@ -213,7 +216,7 @@ async function render() {
       wsTabs,
       thumbnails,
       handleTabClosed,
-      { meridianWorkspace: ws }
+      { meridianWorkspace: ws, collapsed: collapsedLanes[ws.id] ?? false }
     );
     lane.addEventListener('workspace-reassigned', scheduleRender);
     container.appendChild(lane);
@@ -224,7 +227,8 @@ async function render() {
     const group = groupMap.get(groupId);
     const name = group?.title?.trim() || colorLabel(group?.color);
     const workspace = { id: `cg_${groupId}`, name };
-    const lane = createWorkspaceLane(workspace, tabs, thumbnails, handleTabClosed, { chromeGroup: group });
+    const lane = createWorkspaceLane(workspace, tabs, thumbnails, handleTabClosed,
+      { chromeGroup: group, collapsed: collapsedLanes[workspace.id] ?? false });
     lane.addEventListener('workspace-reassigned', scheduleRender);
     container.appendChild(lane);
   }

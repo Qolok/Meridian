@@ -18,12 +18,12 @@ const GROUP_COLORS = {
 
 const CHEVRON = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>`;
 
-export function createWorkspaceLane(workspace, tabs, thumbnails, onTabClosed, { chromeGroup, meridianWorkspace } = {}) {
+export function createWorkspaceLane(workspace, tabs, thumbnails, onTabClosed, { chromeGroup, meridianWorkspace, collapsed: initialCollapsed = false } = {}) {
   const lane = document.createElement('div');
   lane.className = 'workspace-lane';
   lane.dataset.workspaceId = workspace.id;
 
-  let collapsed = false;
+  let collapsed = initialCollapsed;
 
   // ---- Header ----
   const header = document.createElement('div');
@@ -84,11 +84,24 @@ export function createWorkspaceLane(workspace, tabs, thumbnails, onTabClosed, { 
   const grid = document.createElement('div');
   grid.className = 'tab-grid';
 
+  // Apply initial collapsed state
+  grid.classList.toggle('hidden', collapsed);
+  collapseBtn.classList.toggle('lane-collapse-btn--collapsed', collapsed);
+  collapseBtn.setAttribute('aria-label', collapsed ? 'Expand lane' : 'Collapse lane');
+
   collapseBtn.addEventListener('click', () => {
     collapsed = !collapsed;
     grid.classList.toggle('hidden', collapsed);
     collapseBtn.classList.toggle('lane-collapse-btn--collapsed', collapsed);
     collapseBtn.setAttribute('aria-label', collapsed ? 'Expand lane' : 'Collapse lane');
+    chrome.storage.local.get('collapsedLanes').then(({ collapsedLanes = {} }) => {
+      if (collapsed) {
+        collapsedLanes[workspace.id] = true;
+      } else {
+        delete collapsedLanes[workspace.id];
+      }
+      chrome.storage.local.set({ collapsedLanes });
+    });
   });
 
   // ---- Tab cards ----
