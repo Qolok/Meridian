@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Meridian",
+  "version": "1.0.0",
+  "description": "Spatial tab command center",
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["tabs", "tabGroups", "storage", "scripting"],
+  "commands": {
+    "focus-meridian": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+M"
+      },
+      "description": "Focus Meridian tab"
+    }
+  },
+  "action": {}
+}
