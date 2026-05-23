@@ -1,3 +1,5 @@
+import { initTabIndex, rebuildIndex } from './utils/browserSearch.js';
+
 let meridianTabId = null;
 
 function getMeridianUrl() {
@@ -192,4 +194,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     refreshAllThumbnails().then(() => sendResponse({ done: true }));
     return true;
   }
+});
+
+// Open side panel when toolbar icon is clicked
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
+
+// Tab search index
+rebuildIndex();
+initTabIndex();
+
+// Track previous tab for popup's "switch to previous tab" feature
+let _previousTabId = null;
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  await resolveMeridianTabId();
+  if (activeInfo.tabId === meridianTabId) return; // never track Meridian as current or previous
+  if (_previousTabId !== null && _previousTabId !== activeInfo.tabId) {
+    chrome.storage.local.set({ previousTabId: _previousTabId });
+  }
+  _previousTabId = activeInfo.tabId;
 });

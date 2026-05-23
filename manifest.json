@@ -7,9 +7,10 @@
     "newtab": "meridian.html"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
-  "permissions": ["tabs", "tabGroups", "storage", "scripting"],
+  "permissions": ["tabs", "tabGroups", "storage", "scripting", "bookmarks", "history", "sidePanel"],
   "host_permissions": ["<all_urls>"],
   "commands": {
     "focus-meridian": {
@@ -17,6 +18,12 @@
         "default": "Ctrl+Shift+M"
       },
       "description": "Focus Meridian tab"
+    },
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Space"
+      },
+      "description": "Open Meridian quick search"
     }
   },
   "icons": {
@@ -25,7 +32,11 @@
     "48": "img/icon48.png",
     "128": "img/icon128.png"
   },
+  "side_panel": {
+    "default_path": "components/sidebar.html"
+  },
   "action": {
+    "default_title": "Meridian",
     "default_icon": {
       "16": "img/icon16.png",
       "32": "img/icon32.png",

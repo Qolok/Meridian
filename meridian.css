@@ -60,6 +60,14 @@ body {
   min-height: 100vh;
 }
 
+html {
+  scrollbar-width: none;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
 /* ---- Search zone ---- */
 
 #search-zone {

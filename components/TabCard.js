@@ -3,6 +3,7 @@ export function createTabCard(tab, thumbnail) {
   card.className = "tab-card";
   card.tabIndex = 0;
   card.dataset.tabId = tab.id;
+  card.dataset.tabUrl = tab.url || "";
   card.draggable = true;
 
   if (thumbnail) {
