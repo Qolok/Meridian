@@ -27,7 +27,7 @@ export function createTabCard(tab, thumbnail) {
     favicon.className = "card-favicon";
     favicon.src = tab.favIconUrl;
     favicon.alt = "";
-    favicon.onerror = () => favicon.remove();
+    favicon.onerror = () => favicon.replaceWith(makeFaviconPlaceholder(tab.url, 14));
     info.appendChild(favicon);
   }
 
@@ -112,4 +112,18 @@ export function createTabCard(tab, thumbnail) {
 function getInitial(title) {
   if (!title) return "?";
   return title.trim().charAt(0).toUpperCase();
+}
+
+function makeFaviconPlaceholder(url, size) {
+  let letter = "?";
+  try {
+    letter = new URL(url).hostname.replace(/^www\./, "").charAt(0).toUpperCase() || "?";
+  } catch (_) {}
+  const el = document.createElement("span");
+  el.className = "favicon-placeholder";
+  el.style.width = size + "px";
+  el.style.height = size + "px";
+  el.style.fontSize = Math.round(size * 0.65) + "px";
+  el.textContent = letter;
+  return el;
 }

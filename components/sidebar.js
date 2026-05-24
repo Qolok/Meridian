@@ -76,7 +76,13 @@ function makeFaviconImg(url, favIconUrl) {
   const src = favIconUrl || (url ? faviconUrl(url) : '');
   if (src) img.src = src;
   img.onerror = () => {
-    img.style.display = 'none';
+    let letter = '?';
+    try { letter = new URL(url).hostname.replace(/^www\./, '').charAt(0).toUpperCase() || '?'; } catch (_) {}
+    const ph = document.createElement('span');
+    ph.className = 'favicon-placeholder tab-favicon';
+    ph.style.cssText = 'font-size:10px';
+    ph.textContent = letter;
+    img.replaceWith(ph);
   };
   return img;
 }

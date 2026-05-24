@@ -462,7 +462,13 @@ function buildResultRow(item) {
     item.favicon ||
     `https://www.google.com/s2/favicons?domain=${item.domain}&sz=16`;
   favicon.onerror = () => {
-    favicon.style.display = "none";
+    let letter = "?";
+    try { letter = new URL(item.url).hostname.replace(/^www\./, "").charAt(0).toUpperCase() || "?"; } catch (_) {}
+    const ph = document.createElement("span");
+    ph.className = "favicon-placeholder";
+    ph.style.cssText = "width:16px;height:16px;font-size:10px";
+    ph.textContent = letter;
+    favicon.replaceWith(ph);
   };
 
   const body = document.createElement("div");

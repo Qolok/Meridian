@@ -804,6 +804,20 @@ html {
   margin: 4px 0;
 }
 
+/* ---- Favicon placeholder ---- */
+
+.favicon-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
 /* ---- Utilities ---- */
 
 .hidden {
