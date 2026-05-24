@@ -361,6 +361,11 @@ function renderResultSection(container, label, items) {
 async function runSearch(q) {
   const container = document.getElementById('tab-list');
   const results = await search(q);
+  const { localSearch } = await chrome.storage.sync.get("localSearch");
+  const ls = localSearch ?? { tabs: true, bookmarks: true, history: true };
+  if (!ls.tabs) results.tabs = [];
+  if (!ls.bookmarks) results.bookmarks = [];
+  if (!ls.history) results.history = [];
   container.innerHTML = '';
 
   const total =
@@ -434,7 +439,19 @@ function attachListeners() {
     }
   });
 
-  input.addEventListener('keydown', (e) => {
+  input.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter' && query) {
+      e.preventDefault();
+      const { searchProvider } = await chrome.storage.sync.get('searchProvider');
+      const baseUrl = PROVIDER_URLS[searchProvider] ?? PROVIDER_URLS.google;
+      chrome.tabs.create({ url: baseUrl + encodeURIComponent(query) });
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      document.querySelector('#tab-list .tab-row')?.focus();
+      return;
+    }
     if (e.key === 'Escape' && query) {
       e.preventDefault();
       input.value = '';

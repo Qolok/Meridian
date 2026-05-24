@@ -23,21 +23,9 @@ const PROVIDERS = [
     url: "https://search.brave.com/search?q=",
     favicon: "https://brave.com/favicon.ico",
   },
-  {
-    id: "browser",
-    name: "Browser",
-    favicon: null,
-    url: null,
-  },
 ];
 
 const SEARCH_ICON = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`;
-
-function getBrowserIconUrl() {
-  const ua = navigator.userAgent;
-  const file = (ua.includes("Edg/") || ua.includes("EdgA/")) ? "edge.svg" : "chrome.svg";
-  return chrome.runtime.getURL(`img/${file}`);
-}
 
 export function createSearchBar(container) {
   let currentProvider = PROVIDERS[0];
@@ -83,7 +71,7 @@ export function createSearchBar(container) {
   input.setAttribute("aria-label", "Search");
   input.autofocus = true;
 
-  // Clear button (shown only in browser mode when input has text)
+  // Clear button (shown when input has text)
   const clearBtn = document.createElement("button");
   clearBtn.className = "search-clear-btn hidden";
   clearBtn.setAttribute("aria-label", "Clear search");
@@ -96,7 +84,7 @@ export function createSearchBar(container) {
   submitBtn.innerHTML = SEARCH_ICON;
 
   function updateClearBtn() {
-    if (currentProvider.id === "browser" && input.value.length > 0) {
+    if (input.value.length > 0) {
       clearBtn.classList.remove("hidden");
     } else {
       clearBtn.classList.add("hidden");
@@ -105,24 +93,11 @@ export function createSearchBar(container) {
 
   function updateProvider(provider) {
     currentProvider = provider;
-
-    if (provider.id === "browser") {
-      logoImg.src = getBrowserIconUrl();
-      logoImg.style.display = "";
-      logoFallback.style.display = "none";
-      input.placeholder = "Search tabs, bookmarks, history…";
-      api.onBrowserModeChange?.(true);
-    } else {
-      logoImg.src = provider.favicon;
-      logoImg.style.display = "";
-      logoFallback.style.display = "none";
-      logoFallback.textContent = provider.name.charAt(0);
-      input.placeholder = "Search…";
-      api.onBrowserModeChange?.(false);
-    }
-
+    logoImg.src = provider.favicon;
+    logoImg.style.display = "";
+    logoFallback.style.display = "none";
+    logoFallback.textContent = provider.name.charAt(0);
     logoBtn.setAttribute("aria-label", `Search engine: ${provider.name}`);
-    updateClearBtn();
     renderDropdown();
     chrome.storage.sync.set({ searchProvider: provider.id });
   }
@@ -133,8 +108,22 @@ export function createSearchBar(container) {
       const opt = document.createElement("div");
       opt.className =
         "provider-option" + (p.id === currentProvider.id ? " active" : "");
-      opt.textContent = p.name;
       opt.setAttribute("role", "option");
+
+      const favicon = document.createElement("img");
+      favicon.width = 16;
+      favicon.height = 16;
+      favicon.alt = "";
+      favicon.src = p.favicon;
+      favicon.onerror = () => {
+        favicon.style.display = "none";
+      };
+      opt.appendChild(favicon);
+
+      const nameSpan = document.createElement("span");
+      nameSpan.textContent = p.name;
+      opt.appendChild(nameSpan);
+
       opt.addEventListener("click", (e) => {
         e.stopPropagation();
         updateProvider(p);
@@ -172,29 +161,22 @@ export function createSearchBar(container) {
 
   input.addEventListener("input", () => {
     updateClearBtn();
-    if (currentProvider.id === "browser") {
-      api.onBrowserQuery?.(input.value.trim() || null);
-    }
+    api.onBrowserQuery?.(input.value.trim() || null);
   });
 
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
-      if (currentProvider.id === "browser") {
-        // Browser search results are rendered live; Enter does nothing extra
-        return;
-      }
       doSearch();
     }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      api.onArrowDown?.();
+    }
     if (e.key === "Escape") {
-      if (currentProvider.id === "browser") {
-        input.value = "";
-        updateClearBtn();
-        api.onBrowserQuery?.(null);
-        input.blur();
-      } else {
-        input.value = "";
-        input.blur();
-      }
+      input.value = "";
+      updateClearBtn();
+      api.onBrowserQuery?.(null);
+      input.blur();
     }
   });
 
@@ -205,10 +187,7 @@ export function createSearchBar(container) {
     input.focus();
   });
 
-  submitBtn.addEventListener("click", () => {
-    if (currentProvider.id === "browser") return;
-    doSearch();
-  });
+  submitBtn.addEventListener("click", doSearch);
 
   wrapper.appendChild(logoBtn);
   wrapper.appendChild(input);
@@ -226,8 +205,8 @@ export function createSearchBar(container) {
 
   const api = {
     focus: () => input.focus(),
-    onBrowserModeChange: null,
     onBrowserQuery: null,
+    onArrowDown: null,
     clearSearch: () => {
       input.value = "";
       updateClearBtn();

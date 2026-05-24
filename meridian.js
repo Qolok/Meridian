@@ -570,6 +570,11 @@ async function handleBrowserQuery(query) {
   filterGrid(query);
 
   const r = await search(query);
+  const { localSearch } = await chrome.storage.sync.get("localSearch");
+  const ls = localSearch ?? { tabs: true, bookmarks: true, history: true };
+  if (!ls.tabs) r.tabs = [];
+  if (!ls.bookmarks) r.bookmarks = [];
+  if (!ls.history) r.history = [];
   browserSearchResults = r;
 
   renderSearchResults(r, query);
@@ -649,18 +654,16 @@ async function init() {
 
   searchBarApi = createSearchBar(document.getElementById("search-bar"));
 
-  searchBarApi.onBrowserModeChange = (isBrowser) => {
-    if (!isBrowser) {
-      clearBrowserSearch();
-    }
-  };
-
   searchBarApi.onBrowserQuery = (query) => {
     if (!query) {
       clearBrowserSearch();
     } else {
       handleBrowserQuery(query);
     }
+  };
+
+  searchBarApi.onArrowDown = () => {
+    document.querySelector("#browser-search-results .result-row")?.focus();
   };
 
   const settingsOverlay = document.getElementById("settings-overlay");

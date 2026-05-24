@@ -180,6 +180,52 @@ export function createSettingsPanel(container, onClose) {
   domainGroup.appendChild(toggleRow);
   panel.appendChild(domainGroup);
 
+  // --- Local Search ---
+  const localSearchGroup = document.createElement("div");
+  localSearchGroup.className = "settings-group";
+
+  const localSearchLabel = document.createElement("span");
+  localSearchLabel.className = "settings-label";
+  localSearchLabel.textContent = "Local Search";
+  localSearchGroup.appendChild(localSearchLabel);
+
+  let localSearch = { tabs: true, bookmarks: true, history: true };
+
+  const localSearchSources = [
+    { key: "tabs", label: "Open Tabs" },
+    { key: "bookmarks", label: "Bookmarks" },
+    { key: "history", label: "History" },
+  ];
+
+  const localSearchCheckboxes = {};
+
+  for (const source of localSearchSources) {
+    const row = document.createElement("label");
+    row.className = "settings-toggle-row";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "settings-toggle";
+    checkbox.setAttribute("aria-label", source.label);
+    checkbox.checked = true;
+
+    const label = document.createElement("span");
+    label.textContent = source.label;
+
+    checkbox.addEventListener("change", () => {
+      localSearch[source.key] = checkbox.checked;
+      chrome.storage.sync.set({ localSearch });
+      window.dispatchEvent(new CustomEvent("settings-changed"));
+    });
+
+    row.appendChild(checkbox);
+    row.appendChild(label);
+    localSearchGroup.appendChild(row);
+    localSearchCheckboxes[source.key] = checkbox;
+  }
+
+  panel.appendChild(localSearchGroup);
+
   // --- Theme ---
   const themeGroup = document.createElement("div");
   themeGroup.className = "settings-group";
@@ -430,6 +476,7 @@ export function createSettingsPanel(container, onClose) {
       "homepageUrl",
       "theme",
       "background",
+      "localSearch",
     ])
     .then((saved) => {
       if (saved.newTabBehavior) newTabBehavior = saved.newTabBehavior;
@@ -438,6 +485,12 @@ export function createSettingsPanel(container, onClose) {
       currentTheme = saved.theme ?? "system";
       currentBg = saved.background ?? { type: "none", value: "" };
       toggleCheckbox.checked = groupByDomain;
+      if (saved.localSearch) {
+        localSearch = { ...localSearch, ...saved.localSearch };
+        for (const key of Object.keys(localSearchCheckboxes)) {
+          localSearchCheckboxes[key].checked = localSearch[key] ?? true;
+        }
+      }
       renderNewTabOptions();
       renderThemeButtons();
       renderBgSection();
