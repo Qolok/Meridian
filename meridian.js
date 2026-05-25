@@ -583,6 +583,7 @@ async function handleBrowserQuery(query) {
   if (!ls.tabs) r.tabs = [];
   if (!ls.bookmarks) r.bookmarks = [];
   if (!ls.history) r.history = [];
+  if (!browserSearchActive) return;
   browserSearchResults = r;
 
   renderSearchResults(r, query);
