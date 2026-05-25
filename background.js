@@ -141,9 +141,16 @@ let lastUpdate = { tabId: null, windowId: null, time: 0 };
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (isRefreshing) return;
-  if (changeInfo.status !== "complete" || !tab.active) return;
   await resolveMeridianTabId();
-  if (tabId === meridianTabId) return;
+  if (tabId === meridianTabId) {
+    // Open the navigated URL in a new tab and restore Meridian
+    if (changeInfo.url && changeInfo.url !== getMeridianUrl()) {
+      chrome.tabs.create({ url: changeInfo.url });
+      chrome.tabs.update(tabId, { url: getMeridianUrl() });
+    }
+    return;
+  }
+  if (changeInfo.status !== "complete" || !tab.active) return;
   const captureTime = Date.now();
   lastUpdate = { tabId, windowId: tab.windowId, time: captureTime };
   await sleep(400);

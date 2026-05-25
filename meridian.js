@@ -126,10 +126,12 @@ async function handleNewTabBehavior() {
     "homepageUrl",
   ]);
   if (newTabBehavior === "focus-pinned") {
-    const currentTab = await chrome.tabs.getCurrent();
-    const [pinned] = await chrome.tabs.query({ pinned: true });
-    if (pinned && currentTab && pinned.id !== currentTab.id) {
-      await chrome.tabs.update(pinned.id, { active: true });
+    const [currentTab, { meridianTabId }] = await Promise.all([
+      chrome.tabs.getCurrent(),
+      chrome.storage.local.get("meridianTabId"),
+    ]);
+    if (meridianTabId && currentTab && meridianTabId !== currentTab.id) {
+      await chrome.tabs.update(meridianTabId, { active: true });
       window.close();
     }
   } else if (newTabBehavior === "open-homepage" && homepageUrl?.trim()) {
