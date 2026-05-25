@@ -10,7 +10,7 @@
 
 Meridian is a local extension with no build step required.
 
-1. Download the [latest release](https://github.com/Qolok/Meridian/releases) and unzip.
+1. Download the [latest release](https://github.com/Emberstone-Studio/Meridian/releases) and unzip.
 2. Open Chrome and navigate to `chrome://extensions`.
 3. Enable **Developer mode** (toggle in the top-right corner).
 4. Click **Load unpacked** and select the unzipped folder.
