@@ -376,7 +376,9 @@ html {
 /* ---- Tab cards ---- */
 
 .tab-card {
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   border-radius: var(--radius);
   border: 1px solid var(--border);
   box-shadow: var(--card-shadow);
@@ -440,10 +442,9 @@ html {
   font-weight: 500;
   color: var(--text-primary);
   line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .card-close-btn {
