@@ -2,7 +2,7 @@
 
 **Spatial tab command center** — a Chrome extension that replaces your new-tab page with a visual tab manager.
 
-![Meridian](img/meridian-screen.png)
+![Meridian](img/meridian-screen1.png)
 
 ---
 
