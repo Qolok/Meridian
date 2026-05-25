@@ -475,6 +475,7 @@ function attachListeners() {
     const { meridianTabId: id } = await chrome.storage.local.get('meridianTabId');
     if (id) chrome.tabs.update(id, { active: true });
   });
+
 }
 
 // ---------------------------------------------------------------------------

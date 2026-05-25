@@ -1,7 +1,7 @@
 const NEW_TAB_OPTIONS = [
-  { id: "meridian-view", label: "Open a new Meridian view" },
-  { id: "focus-pinned", label: "Always return to pinned Meridian" },
-  { id: "open-homepage", label: "Open my homepage" },
+  { id: "meridian-view", label: "Open a new Meridian tab" },
+  { id: "focus-pinned", label: "Return to the pinned Meridian tab" },
+  { id: "open-homepage", label: "Open a specific page" },
 ];
 
 const SOLID_COLORS = [

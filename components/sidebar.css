@@ -80,11 +80,6 @@ body {
   outline: none;
 }
 
-#search-input:focus {
-  border-color: LinkText;
-  box-shadow: 0 0 0 2px color-mix(in srgb, LinkText 20%, transparent);
-}
-
 #search-input::placeholder {
   color: GrayText;
 }
@@ -246,7 +241,9 @@ body {
 
 .tab-close-btn {
   flex-shrink: 0;
-  display: none;
+  display: flex;
+  visibility: hidden;
+  pointer-events: none;
   width: 18px;
   height: 18px;
   border: none;
@@ -262,7 +259,8 @@ body {
 }
 
 .tab-row:hover .tab-close-btn {
-  display: flex;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .tab-close-btn:hover {
@@ -339,8 +337,11 @@ body.narrow .section-label span,
 body.narrow .tab-title,
 body.narrow .tab-meta,
 body.narrow .prev-label,
-body.narrow .tab-close-btn,
 body.narrow #new-tab-label {
+  display: none;
+}
+
+body.narrow .tab-close-btn {
   display: none;
 }
 
