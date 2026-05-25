@@ -13,10 +13,12 @@
   --text-secondary: #6b6b6b;
   --accent: #0071e3;
   --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --card-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.28);
   --radius: 8px;
   --radius-sm: 4px;
   --transition: 150ms ease;
+  --card-bg: rgba(255, 255, 255, 0.80);
+  --card-blur: 3px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,6 +32,8 @@
     --accent: #0a84ff;
     --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
     --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.5);
+    --card-bg: rgba(44, 44, 46, 0.80);
+    --card-blur: 8px;
   }
 }
 
@@ -43,6 +47,8 @@ html[data-theme="dark"] {
   --accent: #0a84ff;
   --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   --card-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --card-bg: rgba(44, 44, 46, 0.80);
+  --card-blur: 8px;
 }
 
 body {
@@ -86,7 +92,6 @@ html {
   align-items: center;
   gap: 8px;
   background: var(--surface);
-  border: 1px solid var(--border);
   border-radius: 10px;
   box-shadow: var(--card-shadow);
   padding: 0 12px;
@@ -175,7 +180,6 @@ html {
   top: calc(100% + 6px);
   left: 0;
   background: var(--surface);
-  border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--card-shadow-hover);
   z-index: 100;
@@ -294,8 +298,8 @@ html {
   width: 36px;
   height: 36px;
   border-radius: 50%;
+  border: none;
   background: var(--surface);
-  border: 1px solid var(--border);
   box-shadow: var(--card-shadow);
   color: var(--text-secondary);
   font-size: 22px;
@@ -376,11 +380,10 @@ html {
 /* ---- Tab cards ---- */
 
 .tab-card {
-  background: color-mix(in srgb, var(--surface) 85%, transparent);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  background: var(--card-bg);
+  -webkit-backdrop-filter: blur(var(--card-blur));
+  backdrop-filter: blur(var(--card-blur));
   border-radius: var(--radius);
-  border: 1px solid var(--border);
   box-shadow: var(--card-shadow);
   cursor: pointer;
   position: relative;
@@ -488,8 +491,8 @@ html {
   width: 36px;
   height: 36px;
   border-radius: 50%;
+  border: none;
   background: var(--surface);
-  border: 1px solid var(--border);
   box-shadow: var(--card-shadow);
   cursor: pointer;
   color: var(--text-secondary);
@@ -514,8 +517,8 @@ html {
   width: 36px;
   height: 36px;
   border-radius: 50%;
+  border: none;
   background: var(--surface);
-  border: 1px solid var(--border);
   box-shadow: var(--card-shadow);
   cursor: pointer;
   color: var(--text-secondary);
@@ -773,7 +776,6 @@ html {
 .context-menu {
   position: fixed;
   background: var(--surface);
-  border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--card-shadow-hover);
   z-index: 300;
@@ -845,9 +847,7 @@ html {
   width: 400px;
   border-radius: 6px;
   overflow: hidden;
-  box-shadow:
-    0 6px 32px rgba(0, 0, 0, 0.55),
-    0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--card-shadow-hover);
   cursor: pointer;
   animation: lightbox-appear 200ms cubic-bezier(0.2, 0, 0.2, 1) forwards;
 }
@@ -879,23 +879,23 @@ html {
   aspect-ratio: 16 / 10;
   object-fit: cover;
   display: block;
-  background: #111;
+  background: var(--surface-hover);
 }
 
 .lightbox-placeholder {
   width: 100%;
   aspect-ratio: 16 / 10;
-  background: #1a1a1a;
+  background: var(--surface-hover);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 56px;
   font-weight: 700;
-  color: #444;
+  color: var(--text-secondary);
 }
 
 .lightbox-body {
-  background: #141414;
+  background: var(--surface);
   padding: 10px 14px 12px;
 }
 
@@ -903,7 +903,7 @@ html {
   margin: 0 0 6px;
   font-size: 14px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -925,7 +925,7 @@ html {
 
 .lightbox-url {
   font-size: 11px;
-  color: #888;
+  color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -978,11 +978,11 @@ html {
 .settings-bg-swatch {
   aspect-ratio: 16 / 10;
   border-radius: var(--radius-sm);
-  border: 2px solid transparent;
+  border: none;
   cursor: pointer;
   overflow: hidden;
   transition:
-    border-color var(--transition),
+    box-shadow var(--transition),
     transform var(--transition);
   background-size: cover;
   background-position: center;
@@ -994,7 +994,7 @@ html {
 }
 
 .settings-bg-swatch.selected {
-  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
 }
 
 .settings-bg-swatch img {

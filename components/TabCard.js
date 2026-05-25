@@ -81,7 +81,7 @@ export function createTabCard(tab, thumbnail) {
 
   let hoverTimer = null;
 
-  card.addEventListener("mouseenter", () => {
+  function startLightboxTimer() {
     hoverTimer = setTimeout(() => {
       hoverTimer = null;
       card.dispatchEvent(
@@ -91,11 +91,21 @@ export function createTabCard(tab, thumbnail) {
         }),
       );
     }, 1000);
-  });
+  }
 
-  card.addEventListener("mouseleave", () => {
+  function cancelLightboxTimer() {
     clearTimeout(hoverTimer);
     hoverTimer = null;
+  }
+
+  card.addEventListener("mouseenter", startLightboxTimer);
+
+  card.addEventListener("mouseleave", cancelLightboxTimer);
+
+  closeBtn.addEventListener("mouseenter", cancelLightboxTimer);
+
+  closeBtn.addEventListener("mouseleave", () => {
+    if (card.matches(":hover")) startLightboxTimer();
   });
 
   card.addEventListener("dragstart", (e) => {
